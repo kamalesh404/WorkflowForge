@@ -47,6 +47,21 @@ export interface Workflow {
   created_at: string;
 }
 
+export interface ExecutionLog {
+  timestamp: string;
+  task_id: string;
+  task_name: string;
+  level: string;
+  message: string;
+}
+
+export interface WorkflowMetrics {
+  success_rate: number;
+  avg_duration_ms: number;
+  total_runs: number;
+  failed_runs: number;
+}
+
 export async function getStats(): Promise<Stats> {
   const res = await fetch(`${BASE}/stats`);
   return res.json();
@@ -54,6 +69,11 @@ export async function getStats(): Promise<Stats> {
 
 export async function getWorkflows(): Promise<Workflow[]> {
   const res = await fetch(`${BASE}/workflows`);
+  return res.json();
+}
+
+export async function getWorkflow(id: string): Promise<Workflow> {
+  const res = await fetch(`${BASE}/workflows/${id}`);
   return res.json();
 }
 
@@ -70,8 +90,32 @@ export async function getExecution(id: string): Promise<Execution> {
   return res.json();
 }
 
+export async function getWorkflowExecutions(workflowId: string): Promise<Execution[]> {
+  const res = await fetch(`${BASE}/executions?workflow_id=${encodeURIComponent(workflowId)}`);
+  return res.json();
+}
+
+export async function getExecutionLogs(executionId: string): Promise<ExecutionLog[]> {
+  const res = await fetch(`${BASE}/executions/${encodeURIComponent(executionId)}/logs`);
+  return res.json();
+}
+
+export async function getWorkflowMetrics(workflowId: string): Promise<WorkflowMetrics> {
+  const res = await fetch(`${BASE}/workflows/${encodeURIComponent(workflowId)}/metrics`);
+  return res.json();
+}
+
 export async function executeWorkflow(id: string): Promise<{ execution_id: string }> {
   const res = await fetch(`${BASE}/workflows/${id}/execute`, { method: "POST" });
+  return res.json();
+}
+
+export async function scheduleWorkflow(workflowId: string, cronExpr: string): Promise<{ scheduled: boolean }> {
+  const res = await fetch(`${BASE}/workflows/${encodeURIComponent(workflowId)}/schedule`, {
+    method: "POST",
+    headers: { "Content-Type": "application/json" },
+    body: JSON.stringify({ cron: cronExpr }),
+  });
   return res.json();
 }
 
